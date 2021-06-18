@@ -1,0 +1,14 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: winery
+  namespace: fuseml-workloads
+spec:
+  template:
+    spec:
+      containers:
+        - image: 'ghcr.io/fuseml/winery-app:0.1'
+          name: wineryapp
+          ports:
+            - containerPort: 8501
+
