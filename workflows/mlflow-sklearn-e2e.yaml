@@ -17,17 +17,15 @@ outputs:
     type: string
 steps:
   - name: builder
-    image: ghcr.io/fuseml/mlflow-dockerfile:0.1
+    image: ghcr.io/fuseml/mlflow-builder:v0.1
     inputs:
       - codeset:
           name: '{{ inputs.mlflow-codeset }}'
           path: /project
     outputs:
-      - name: mlflow-env
-        image:
-          name: 'registry.fuseml-registry/mlflow-builder/{{ inputs.mlflow-codeset.name }}:{{ inputs.mlflow-codeset.version }}'
+      - name: image
   - name: trainer
-    image: '{{ steps.builder.outputs.mlflow-env }}'
+    image: '{{ steps.builder.outputs.image }}'
     inputs:
       - codeset:
           name: '{{ inputs.mlflow-codeset }}'
