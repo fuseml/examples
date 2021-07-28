@@ -1,0 +1,11 @@
+{  
+    "signature_name": "predict",
+    "instances":[  
+       { 
+          "SepalLength": [5.1],
+          "SepalWidth": [3.3],
+          "PetalLength": [1.7],
+          "PetalWidth": [7.5]
+       }
+    ]
+ }

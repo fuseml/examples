@@ -1,4 +1,4 @@
-name: mlflow-sklearn-e2e
+name: mlflow-e2e
 description: |
   End-to-end pipeline template that takes in an MLFlow compatible codeset,
   runs the MLFlow project to train a model, then creates a KFServing prediction
