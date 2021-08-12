@@ -17,7 +17,7 @@ outputs:
     type: string
 steps:
   - name: builder
-    image: ghcr.io/fuseml/mlflow-builder:v0.1
+    image: ghcr.io/fuseml/mlflow-builder:dev
     inputs:
       - codeset:
           name: '{{ inputs.mlflow-codeset }}'
@@ -42,7 +42,7 @@ steps:
       - name: AWS_SECRET_ACCESS_KEY
         value: uW1qiFS8DTFuACXCDrM7i5zLJXbbfXd6pReyntjn
   - name: predictor
-    image: ghcr.io/fuseml/kfserving-predictor:0.1
+    image: ghcr.io/fuseml/kfserving-predictor:dev
     inputs:
       - name: model
         value: '{{ steps.trainer.outputs.mlflow-model-url }}'
