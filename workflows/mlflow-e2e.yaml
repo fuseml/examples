@@ -19,7 +19,8 @@ steps:
   - name: builder
     image: ghcr.io/fuseml/mlflow-builder:dev
     inputs:
-      - codeset:
+      - name: mlflow-codeset
+        codeset:
           name: '{{ inputs.mlflow-codeset }}'
           path: /project
     outputs:
@@ -27,20 +28,19 @@ steps:
   - name: trainer
     image: '{{ steps.builder.outputs.image }}'
     inputs:
-      - codeset:
+      - name: mlflow-codeset
+        codeset:
           name: '{{ inputs.mlflow-codeset }}'
           path: '/project'
     outputs:
       - name: mlflow-model-url
-    env:
-      - name: MLFLOW_TRACKING_URI
-        value: "http://mlflow"
-      - name: MLFLOW_S3_ENDPOINT_URL
-        value: "http://mlflow-minio:9000"
-      - name: AWS_ACCESS_KEY_ID
-        value: gABTE5DmmLgjJypJzGFs
-      - name: AWS_SECRET_ACCESS_KEY
-        value: uW1qiFS8DTFuACXCDrM7i5zLJXbbfXd6pReyntjn
+    extensions:
+      - name: mlflow-tracking
+        product: mlflow
+        service_resource: mlflow-tracking
+      - name: mlflow-store
+        product: mlflow
+        service_resource: s3
   - name: predictor
     image: ghcr.io/fuseml/kfserving-predictor:dev
     inputs:
@@ -48,13 +48,14 @@ steps:
         value: '{{ steps.trainer.outputs.mlflow-model-url }}'
       - name: predictor
         value: '{{ inputs.predictor }}'
-      - codeset:
+      - name: mlflow-codeset
+        codeset:
           name: '{{ inputs.mlflow-codeset }}'
           path: '/project'
     outputs:
       - name: prediction-url
-    env:
-      - name: AWS_ACCESS_KEY_ID
-        value: gABTE5DmmLgjJypJzGFs
-      - name: AWS_SECRET_ACCESS_KEY
-        value: uW1qiFS8DTFuACXCDrM7i5zLJXbbfXd6pReyntjn
+    extensions:
+      - name: s3-storage
+        service_resource: s3
+      - name: kfserving
+        service_resource: kfserving-api
