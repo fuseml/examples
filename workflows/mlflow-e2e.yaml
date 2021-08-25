@@ -19,7 +19,8 @@ steps:
   - name: builder
     image: ghcr.io/fuseml/mlflow-builder:dev
     inputs:
-      - codeset:
+      - name: mlflow-codeset
+        codeset:
           name: '{{ inputs.mlflow-codeset }}'
           path: /project
     outputs:
@@ -27,7 +28,8 @@ steps:
   - name: trainer
     image: '{{ steps.builder.outputs.image }}'
     inputs:
-      - codeset:
+      - name: mlflow-codeset
+        codeset:
           name: '{{ inputs.mlflow-codeset }}'
           path: '/project'
     outputs:
@@ -48,7 +50,8 @@ steps:
         value: '{{ steps.trainer.outputs.mlflow-model-url }}'
       - name: predictor
         value: '{{ inputs.predictor }}'
-      - codeset:
+      - name: mlflow-codeset
+        codeset:
           name: '{{ inputs.mlflow-codeset }}'
           path: '/project'
     outputs:
