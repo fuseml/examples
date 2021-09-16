@@ -42,7 +42,7 @@ steps:
         product: mlflow
         service_resource: s3
   - name: predictor
-    image: ghcr.io/fuseml/kfserving-predictor:0.2.1
+    image: ghcr.io/fuseml/kfserving-predictor:v0.2.1
     inputs:
       - name: model
         value: '{{ steps.trainer.outputs.mlflow-model-url }}'
