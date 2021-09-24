@@ -1,0 +1,59 @@
+name: mlflow-seldon-e2e
+description: |
+  End-to-end pipeline template that takes in an MLFlow compatible codeset,
+  runs the MLFlow project to train a model, then uses Seldon Core to create prediction
+  service that can be used to run predictions against the model."
+inputs:
+  - name: mlflow-codeset
+    description: an MLFlow compatible codeset
+    type: codeset
+  - name: predictor
+    description: type of predictor engine
+    type: string
+    default: auto
+outputs:
+  - name: prediction-url
+    description: "The URL where the exposed prediction service endpoint can be contacted to run predictions."
+    type: string
+steps:
+  - name: builder
+    image: ghcr.io/fuseml/mlflow-builder:dev
+    inputs:
+      - name: mlflow-codeset
+        codeset:
+          name: '{{ inputs.mlflow-codeset }}'
+          path: /project
+    outputs:
+      - name: image
+  - name: trainer
+    image: '{{ steps.builder.outputs.image }}'
+    inputs:
+      - name: mlflow-codeset
+        codeset:
+          name: '{{ inputs.mlflow-codeset }}'
+          path: '/project'
+    outputs:
+      - name: mlflow-model-url
+    extensions:
+      - name: mlflow-tracking
+        product: mlflow
+        service_resource: mlflow-tracking
+      - name: mlflow-store
+        product: mlflow
+        service_resource: s3
+  - name: predictor
+    image: ghcr.io/fuseml/seldon-core-predictor:dev
+    inputs:
+      - name: model
+        value: '{{ steps.trainer.outputs.mlflow-model-url }}'
+      - name: predictor
+        value: '{{ inputs.predictor }}'
+      - name: mlflow-codeset
+        codeset:
+          name: '{{ inputs.mlflow-codeset }}'
+          path: '/project'
+    outputs:
+      - name: prediction-url
+    extensions:
+      - name: s3-storage
+        service_resource: s3
