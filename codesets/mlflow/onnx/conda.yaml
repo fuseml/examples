@@ -1,0 +1,13 @@
+name: tutorial
+channels:
+  - defaults
+dependencies:
+  - python=3.6
+  - numpy>=1.14.3
+  - pandas>=1.0.0
+  - pip
+  - pip:
+    - scikit-learn==0.23.2
+    - mlflow
+    - skl2onnx
+    - onnxruntime
