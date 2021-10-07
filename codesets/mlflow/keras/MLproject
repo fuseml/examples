@@ -1,0 +1,9 @@
+name: keras
+conda_env: conda.yaml
+
+entry_points:
+  main:
+    parameters:
+      epochs: {type: int, default: 2}
+    command: "python train.py --epochs={epochs}"
+
