@@ -66,6 +66,6 @@ if __name__ == "__main__":
         mlflow.log_metric("mae", mae)
 
         initial_type = [ ('input-0', FloatTensorType([None, 11])) ]
-        onnx_model = to_onnx(lr, initial_types=initial_type)
+        onnx_model = to_onnx(lr, target_opset=14, initial_types=initial_type)
 
         mlflow.onnx.log_model(onnx_model, "model")
