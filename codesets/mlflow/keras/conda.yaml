@@ -1,0 +1,12 @@
+name: keras
+channels:
+  - nvidia
+  - conda-forge
+dependencies:
+  - cudatoolkit>=11.4
+  - cuda-cupti>=11.4
+  - cudnn>=8.2
+  - pip
+  - pip:
+    - mlflow
+    - tensorflow
