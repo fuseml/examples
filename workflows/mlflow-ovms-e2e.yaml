@@ -1,0 +1,86 @@
+name: mlflow-ovms-e2e
+description: |
+  End-to-end pipeline template that takes in an MLFlow compatible codeset,
+  runs the MLFlow project to train a model, then creates an OVMS prediction
+  service that can be used to run predictions against the model.
+  
+  For this workflow, the MLFlow compatible codeset must export the model in
+  one of the following formats: ONNX, TensorFlow saved_model or OpenVINO."
+inputs:
+  - name: mlflow-codeset
+    description: an MLFlow compatible codeset
+    type: codeset
+  - name: model-format
+    description: the exported model format
+    type: string
+    default: auto
+outputs:
+  - name: prediction-url
+    description: "The URL where the exposed prediction service endpoint can be contacted to run predictions."
+    type: string
+steps:
+  - name: builder
+    image: ghcr.io/fuseml/mlflow-builder:dev
+    inputs:
+      - name: mlflow-codeset
+        codeset:
+          name: '{{ inputs.mlflow-codeset }}'
+          path: /project
+    outputs:
+      - name: image
+  - name: trainer
+    image: '{{ steps.builder.outputs.image }}'
+    inputs:
+      - name: mlflow-codeset
+        codeset:
+          name: '{{ inputs.mlflow-codeset }}'
+          path: '/project'
+    outputs:
+      - name: mlflow-model-url
+    extensions:
+      - name: mlflow-tracking
+        product: mlflow
+        service_resource: mlflow-tracking
+      - name: mlflow-store
+        product: mlflow
+        service_resource: s3
+  - name: converter
+    image: ghcr.io/stefannica/ovms-converter:latest
+    inputs:
+      - name: input_model
+        value: '{{ steps.trainer.outputs.mlflow-model-url }}'
+      - name: output_model
+        value: '{{ steps.trainer.outputs.mlflow-model-url }}/ovms'
+      - name: input_format
+        value: '{{ inputs.model-format }}'
+      - name: output_format
+        value: 'openvino'
+    outputs:
+      - name: ovms-model-url
+    extensions:
+      - name: mlflow-store
+        product: mlflow
+        service_resource: s3
+    env:
+      - name: S3_ENDPOINT
+        value: '{{ extensions.mlflow-store.cfg.MLFLOW_S3_ENDPOINT_URL }}'
+  - name: predictor
+    image: ghcr.io/fuseml/ovms-predictor:dev
+    inputs:
+      - name: model
+        value: '{{ steps.converter.outputs.ovms-model-url }}'
+      - name: mlflow-codeset
+        codeset:
+          name: '{{ inputs.mlflow-codeset }}'
+          path: '/project'
+    outputs:
+      - name: prediction-url
+    extensions:
+      - name: ovms-operator
+        service_resource: ovms-operator
+      - name: mlflow-store
+        product: mlflow
+        service_resource: s3
+    env:
+      - name: S3_ENDPOINT
+        value: '{{ extensions.mlflow-store.cfg.MLFLOW_S3_ENDPOINT_URL }}'
