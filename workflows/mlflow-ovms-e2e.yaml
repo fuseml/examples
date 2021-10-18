@@ -45,7 +45,7 @@ steps:
         product: mlflow
         service_resource: s3
   - name: converter
-    image: ghcr.io/stefannica/ovms-converter:latest
+    image: ghcr.io/fuseml/ovms-converter:dev
     inputs:
       - name: input_model
         value: '{{ steps.trainer.outputs.mlflow-model-url }}'
