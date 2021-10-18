@@ -57,3 +57,5 @@ steps:
     extensions:
       - name: s3-storage
         service_resource: s3
+      - name: seldon-core
+        service_resource: seldon-core-api
