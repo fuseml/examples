@@ -1,0 +1,8 @@
+name: x-ray-demo
+
+entry_points:
+  main:
+    parameters:
+      batch_size: {type: int, default: 16}
+      epochs: {type: int, default: 25}
+    command: "python3 train.py --batch_size {batch_size} --epochs {epochs}"

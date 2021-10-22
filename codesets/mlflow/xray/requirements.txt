@@ -1,0 +1,11 @@
+pillow
+numpy
+h5py
+seaborn
+boto3
+scikit-learn
+scipy
+tensorflow==2.5.1
+absl-py
+mlflow
+typing-extensions
