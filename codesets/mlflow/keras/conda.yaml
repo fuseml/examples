@@ -7,8 +7,8 @@ dependencies:
   - cudatoolkit>=11.4
   - cuda-cupti>=11.4
   - cudnn>=8.2
+  - tensorflow
   - keras==2.6.0
   - pip
   - pip:
-      - mlflow
-      - tensorflow
+    - mlflow
