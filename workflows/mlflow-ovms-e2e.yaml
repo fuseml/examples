@@ -20,7 +20,7 @@ outputs:
     type: string
 steps:
   - name: builder
-    image: ghcr.io/fuseml/mlflow-builder:dev
+    image: ghcr.io/fuseml/mlflow-builder:latest
     inputs:
       - name: mlflow-codeset
         codeset:
@@ -45,7 +45,7 @@ steps:
         product: mlflow
         service_resource: s3
   - name: converter
-    image: ghcr.io/fuseml/ovms-converter:dev
+    image: ghcr.io/fuseml/ovms-converter:latest
     inputs:
       - name: input_model
         value: '{{ steps.trainer.outputs.mlflow-model-url }}'
@@ -65,7 +65,7 @@ steps:
       - name: S3_ENDPOINT
         value: '{{ extensions.mlflow-store.cfg.MLFLOW_S3_ENDPOINT_URL }}'
   - name: predictor
-    image: ghcr.io/fuseml/ovms-predictor:dev
+    image: ghcr.io/fuseml/ovms-predictor:latest
     inputs:
       - name: model
         value: '{{ steps.converter.outputs.ovms-model-url }}'
