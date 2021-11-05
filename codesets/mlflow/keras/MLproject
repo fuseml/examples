@@ -5,5 +5,6 @@ entry_points:
   main:
     parameters:
       epochs: {type: int, default: 2}
-    command: "python train.py --epochs={epochs}"
+      batch_size: {type: int, default: 64}
+    command: "python train.py --epochs={epochs} --batch_size={batch_size}"
 
