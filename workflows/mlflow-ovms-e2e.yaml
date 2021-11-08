@@ -44,6 +44,9 @@ steps:
       - name: mlflow-store
         product: mlflow
         service_resource: s3
+    env:
+      - name: TF_ENABLE_ONEDNN_OPTS
+        value: 1
   - name: converter
     image: ghcr.io/fuseml/ovms-converter:latest
     inputs:
@@ -55,6 +58,8 @@ steps:
         value: '{{ inputs.model-format }}'
       - name: output_format
         value: 'openvino'
+      - name: batch
+        value: 1 # OpenVINO cannot work with undefined input dimensions
     outputs:
       - name: ovms-model-url
     extensions:
