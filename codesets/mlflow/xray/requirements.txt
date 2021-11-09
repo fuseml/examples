@@ -1,0 +1,10 @@
+pillow
+numpy
+h5py
+seaborn
+boto3
+scikit-learn
+scipy
+absl-py
+mlflow
+typing-extensions
