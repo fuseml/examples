@@ -1,8 +1,8 @@
 name: mlflow-e2e
 description: |
   End-to-end pipeline template that takes in an MLFlow compatible codeset,
-  runs the MLFlow project to train a model, then creates a KFServing prediction
-  service that can be used to run predictions against the model."
+  runs the MLFlow project to train a model, then creates a KServe prediction
+  service that can be used to run predictions against the model.
 inputs:
   - name: mlflow-codeset
     description: an MLFlow compatible codeset
@@ -21,17 +21,17 @@ steps:
     inputs:
       - name: mlflow-codeset
         codeset:
-          name: '{{ inputs.mlflow-codeset }}'
+          name: "{{ inputs.mlflow-codeset }}"
           path: /project
     outputs:
       - name: image
   - name: trainer
-    image: '{{ steps.builder.outputs.image }}'
+    image: "{{ steps.builder.outputs.image }}"
     inputs:
       - name: mlflow-codeset
         codeset:
-          name: '{{ inputs.mlflow-codeset }}'
-          path: '/project'
+          name: "{{ inputs.mlflow-codeset }}"
+          path: "/project"
     outputs:
       - name: mlflow-model-url
     extensions:
@@ -42,20 +42,20 @@ steps:
         product: mlflow
         service_resource: s3
   - name: predictor
-    image: ghcr.io/fuseml/kfserving-predictor:latest
+    image: ghcr.io/fuseml/kserve-predictor:latest
     inputs:
       - name: model
-        value: '{{ steps.trainer.outputs.mlflow-model-url }}'
+        value: "{{ steps.trainer.outputs.mlflow-model-url }}"
       - name: predictor
-        value: '{{ inputs.predictor }}'
+        value: "{{ inputs.predictor }}"
       - name: mlflow-codeset
         codeset:
-          name: '{{ inputs.mlflow-codeset }}'
-          path: '/project'
+          name: "{{ inputs.mlflow-codeset }}"
+          path: "/project"
     outputs:
       - name: prediction-url
     extensions:
       - name: s3-storage
         service_resource: s3
-      - name: kfserving
-        service_resource: kfserving-api
+      - name: kserve
+        service_resource: kserve-api
