@@ -1,0 +1,173 @@
+name: mlflow-multi-e2e
+description: |
+  End-to-end pipeline template that takes in an MLFlow compatible codeset,
+  runs the MLFlow project to train a model, then creates three prediction
+  services running side by side that can be used to run predictions against
+  the model: an OVMS instance, a KServe instance and a Seldon Core instance.
+
+  For this workflow, the MLFlow compatible codeset must export the model in
+  an ONNX or TensorFlow saved_model format."
+inputs:
+  - name: mlflow-codeset
+    description: an MLFlow compatible codeset
+    type: codeset
+  - name: mlflow_entrypoint
+    description: the MLFlow project entrypoint to execute to train the model
+    default: main
+  - name: mlflow_entrypoint_args
+    description: MLFlow project entrypoint arguments
+    default: batch_size=64 epochs=30
+  - name: model-format
+    description: the format of the trained model
+    type: string
+    default: auto
+  - name: kserve-predictor
+    description: type of predictor engine to use for KServe
+    type: string
+    default: tensorflow
+  - name: seldon-predictor
+    description: type of predictor engine to use for Seldon Core
+    type: string
+    default: tensorflow
+outputs:
+  - name: ovms-prediction-url
+    description: "The URL where the exposed OVMS prediction service endpoint can be contacted to run predictions."
+    type: string
+  - name: kserve-prediction-url
+    description: "The URL where the exposed KServe prediction service endpoint can be contacted to run predictions."
+    type: string
+  - name: seldon-prediction-url
+    description: "The URL where the exposed Seldon Core prediction service endpoint can be contacted to run predictions."
+    type: string
+steps:
+  - name: builder
+    image: ghcr.io/fuseml/mlflow-builder:latest
+    inputs:
+      - name: mlflow-codeset
+        codeset:
+          name: '{{ inputs.mlflow-codeset }}'
+          path: /project
+      - name: verbose
+        value: true
+    outputs:
+      - name: image
+  - name: trainer
+    image: '{{ steps.builder.outputs.image }}'
+    inputs:
+      - name: mlflow-codeset
+        codeset:
+          name: '{{ inputs.mlflow-codeset }}'
+          path: '/project'
+      - name: mlflow_entrypoint
+        value: '{{ inputs.mlflow_entrypoint }}'
+      - name: mlflow_entrypoint_args
+        value: '{{ inputs.mlflow_entrypoint_args }}'
+      - name: verbose
+        value: true
+    outputs:
+      - name: mlflow-model-url
+    extensions:
+      - name: mlflow-tracking
+        product: mlflow
+        service_resource: mlflow-tracking
+      - name: mlflow-store
+        product: mlflow
+        service_resource: s3
+    env:
+      # Enable Intel TensorFlow optimizations to speed up the training process
+      - name: TF_ENABLE_ONEDNN_OPTS
+        value: 1
+    resources:
+      requests:
+        cpu: 1
+  - name: converter
+    image: ghcr.io/fuseml/ovms-converter:latest
+    inputs:
+      - name: input_model
+        value: '{{ steps.trainer.outputs.mlflow-model-url }}'
+      - name: output_model
+        value: '{{ steps.trainer.outputs.mlflow-model-url }}/ovms'
+      - name: input_format
+        value: '{{ inputs.model-format }}'
+      - name: output_format
+        value: 'openvino'
+      - name: batch
+        value: 1 # OpenVINO cannot work with undefined input dimensions
+      - name: extra_args
+        # Disabling the implicit transpose transformation allows the input model shape
+        # to be consistent with those used by other serving platforms
+        value: "--disable_nhwc_to_nchw"
+      - name: verbose
+        value: true
+    outputs:
+      - name: ovms-model-url
+    extensions:
+      - name: mlflow-store
+        product: mlflow
+        service_resource: s3
+    env:
+      - name: S3_ENDPOINT
+        value: '{{ extensions.mlflow-store.cfg.MLFLOW_S3_ENDPOINT_URL }}'
+  - name: ovms-predictor
+    image: ghcr.io/fuseml/ovms-predictor:latest
+    inputs:
+      - name: model
+        value: '{{ steps.converter.outputs.ovms-model-url }}'
+      - name: app_name
+        value: cifar10-ovms
+      - name: batch_size
+        # Use "auto" to set the served model batch size dynamically according to the incoming data at run time
+        value: auto
+      - name: verbose
+        value: false
+      - name: resources
+        value: '{"requests": {"cpu": 1}}'
+      - name: verbose
+        value: true
+    outputs:
+      - name: ovms-prediction-url
+    extensions:
+      - name: ovms-operator
+        service_resource: ovms-operator
+      - name: mlflow-store
+        product: mlflow
+        service_resource: s3
+    env:
+      - name: S3_ENDPOINT
+        value: '{{ extensions.mlflow-store.cfg.MLFLOW_S3_ENDPOINT_URL }}'
+  - name: kserve-predictor
+    image: ghcr.io/fuseml/kserve-predictor:latest
+    inputs:
+      - name: model
+        value: '{{ steps.trainer.outputs.mlflow-model-url }}'
+      - name: app_name
+        value: cifar10-kserve
+      - name: predictor
+        value: '{{ inputs.kserve-predictor }}'
+      - name: verbose
+        value: true
+    outputs:
+      - name: kserve-prediction-url
+    extensions:
+      - name: s3-storage
+        service_resource: s3
+      - name: kserve
+        service_resource: kserve-api
+  - name: seldon-predictor
+    image: ghcr.io/fuseml/seldon-core-predictor:latest
+    inputs:
+      - name: model
+        value: '{{ steps.trainer.outputs.mlflow-model-url }}'
+      - name: app_name
+        value: cifar10-seldon
+      - name: predictor
+        value: '{{ inputs.seldon-predictor }}'
+      - name: verbose
+        value: true
+    outputs:
+      - name: seldon-prediction-url
+    extensions:
+      - name: s3-storage
+        service_resource: s3
+      - name: seldon-core
+        service_resource: seldon-core-api
