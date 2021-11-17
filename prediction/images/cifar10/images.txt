@@ -1,0 +1,10 @@
+airplane4.png 0
+automobile10.png 1
+bird8.png 2
+cat9.png 3
+deer4.png 4
+dog3.png 5
+frog6.png 6
+horse5.png 7
+ship1.png 8
+truck10.png 9
