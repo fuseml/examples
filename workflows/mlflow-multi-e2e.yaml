@@ -48,7 +48,7 @@ steps:
           name: '{{ inputs.mlflow-codeset }}'
           path: /project
       - name: verbose
-        value: true
+        value: false
     outputs:
       - name: image
   - name: trainer
@@ -63,7 +63,7 @@ steps:
       - name: mlflow_entrypoint_args
         value: '{{ inputs.mlflow_entrypoint_args }}'
       - name: verbose
-        value: true
+        value: false
     outputs:
       - name: mlflow-model-url
     extensions:
@@ -98,7 +98,7 @@ steps:
         # to be consistent with those used by other serving platforms
         value: "--disable_nhwc_to_nchw"
       - name: verbose
-        value: true
+        value: false
     outputs:
       - name: ovms-model-url
     extensions:
@@ -123,7 +123,7 @@ steps:
       - name: resources
         value: '{"requests": {"cpu": 1}}'
       - name: verbose
-        value: true
+        value: false
     outputs:
       - name: ovms-prediction-url
     extensions:
@@ -145,7 +145,7 @@ steps:
       - name: predictor
         value: '{{ inputs.kserve-predictor }}'
       - name: verbose
-        value: true
+        value: false
     outputs:
       - name: kserve-prediction-url
     extensions:
@@ -163,7 +163,7 @@ steps:
       - name: predictor
         value: '{{ inputs.seldon-predictor }}'
       - name: verbose
-        value: true
+        value: false
     outputs:
       - name: seldon-prediction-url
     extensions:
