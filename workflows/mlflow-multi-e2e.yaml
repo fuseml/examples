@@ -41,7 +41,7 @@ outputs:
     type: string
 steps:
   - name: builder
-    image: ghcr.io/fuseml/mlflow-builder:latest
+    image: ghcr.io/fuseml/mlflow-builder:v0.3.0
     inputs:
       - name: mlflow-codeset
         codeset:
@@ -81,7 +81,7 @@ steps:
       requests:
         cpu: 1
   - name: converter
-    image: ghcr.io/fuseml/ovms-converter:latest
+    image: ghcr.io/fuseml/ovms-converter:v0.3.0
     inputs:
       - name: input_model
         value: '{{ steps.trainer.outputs.mlflow-model-url }}'
@@ -109,7 +109,7 @@ steps:
       - name: S3_ENDPOINT
         value: '{{ extensions.mlflow-store.cfg.MLFLOW_S3_ENDPOINT_URL }}'
   - name: ovms-predictor
-    image: ghcr.io/fuseml/ovms-predictor:latest
+    image: ghcr.io/fuseml/ovms-predictor:v0.3.0
     inputs:
       - name: model
         value: '{{ steps.converter.outputs.ovms-model-url }}'
@@ -136,7 +136,7 @@ steps:
       - name: S3_ENDPOINT
         value: '{{ extensions.mlflow-store.cfg.MLFLOW_S3_ENDPOINT_URL }}'
   - name: kserve-predictor
-    image: ghcr.io/fuseml/kserve-predictor:latest
+    image: ghcr.io/fuseml/kserve-predictor:v0.3.0
     inputs:
       - name: model
         value: '{{ steps.trainer.outputs.mlflow-model-url }}'
@@ -154,7 +154,7 @@ steps:
       - name: kserve
         service_resource: kserve-api
   - name: seldon-predictor
-    image: ghcr.io/fuseml/seldon-core-predictor:latest
+    image: ghcr.io/fuseml/seldon-core-predictor:v0.3.0
     inputs:
       - name: model
         value: '{{ steps.trainer.outputs.mlflow-model-url }}'
